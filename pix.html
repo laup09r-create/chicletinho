@@ -327,13 +327,17 @@
         });
 
         const data = await response.json();
+if (!response.ok || !data.success) {
+  console.log("Erro completo:", data);
 
-        if (!response.ok || !data.success) {
-          console.log("Erro Zenith:", data);
-          throw new Error(data.error || "Não foi possível gerar o PIX.");
-        }
+  throw new Error(
+    (data.error || "Não foi possível gerar o PIX.") +
+    " | Detalhes: " +
+    JSON.stringify(data.details || data.resposta_bruta || data)
+  );
 
-        if (!data.pixCopiaCola) {
+
+       if (!data.pixCopiaCola) {
           console.log("Resposta completa:", data.raw);
           throw new Error("A Zenith respondeu, mas não encontrei o código PIX.");
         }
