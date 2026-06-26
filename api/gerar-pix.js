@@ -43,12 +43,14 @@ export default async function handler(req, res) {
       amount: valorCentavos,
       payment_method: "pix",
       installments: 1,
+
       customer: {
         name: body.nome || "Cliente Teste",
         email: body.email || "cliente@email.com",
         phone_number: body.telefone || "11999999999",
         document: body.cpf || "00000000000",
       },
+
       cart: [
         {
           offer_hash: offerHash,
@@ -58,6 +60,7 @@ export default async function handler(req, res) {
           title: "Pagamento PIX",
         },
       ],
+
       tracking: {
         src: "site",
         utm_source: body.utm_source || "",
@@ -68,7 +71,7 @@ export default async function handler(req, res) {
       },
     };
 
-    const resposta = await fetch("https://api.zenithpay.com.br/public/v1/transactions", {
+    const resposta = await fetch("https://api.zenithpay.com.br/transactions , {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -104,21 +107,31 @@ export default async function handler(req, res) {
     }
 
     const pixCopiaCola =
+      data?.pix?.pix_qr_code ||
+      data?.pix?.qr_code ||
+      data?.pix?.copy_paste ||
+      data?.data?.pix?.pix_qr_code ||
       data?.data?.pix?.qr_code ||
       data?.data?.pix?.copy_paste ||
       data?.data?.qr_code ||
       data?.data?.copy_paste ||
       data?.data?.pix_code ||
-      data?.pix?.qr_code ||
-      data?.pix?.copy_paste ||
       data?.qr_code ||
       data?.copy_paste ||
       data?.pix_code ||
       "";
 
+    const transactionHash =
+      data?.hash ||
+      data?.transaction_hash ||
+      data?.data?.hash ||
+      data?.data?.transaction_hash ||
+      "";
+
     return res.status(200).json({
       success: true,
       pixCopiaCola,
+      transactionHash,
       raw: data,
     });
   } catch (error) {
