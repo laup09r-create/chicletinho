@@ -7,22 +7,31 @@ export default async function handler(req, res) {
   }
 
   try {
- const token = (process.env.ZENITH_TOKEN || "")
-  .replace("Value:", "")
-  .replace("value:", "")
-  .replace(/\s/g, "")
-  .trim();
+    const token = (process.env.ZENITH_TOKEN || "")
+      .replace("Value:", "")
+      .replace("value:", "")
+      .replace(/\s/g, "")
+      .trim();
 
-const offerHash = (process.env.ZENITH_OFFER_HASH || "")
-  .replace("Value:", "")
-  .replace("value:", "")
-  .replace(/\s/g, "")
-  .trim();
+    const offerHash = (process.env.ZENITH_OFFER_HASH || "")
+      .replace("Value:", "")
+      .replace("value:", "")
+      .replace(/\s/g, "")
+      .trim();
 
     if (!token) {
       return res.status(500).json({
         success: false,
         error: "ZENITH_TOKEN não configurado na Vercel.",
+      });
+    }
+
+    if (!offerHash) {
+      return res.status(500).json({
+        success: false,
+        error: "ZENITH_OFFER_HASH não configurado na Vercel.",
+      });
+    }
       });
     }
 
@@ -82,13 +91,14 @@ const offerHash = (process.env.ZENITH_OFFER_HASH || "")
       },
     };
 
-    const resposta = await fetch("https://api.zenithpay.com.br/public/v1/transactions", {
-      method: "POST",
-      headers: {
-      headers: {
-  "Content-Type": "application/json",
-  Accept: "application/json",
-      },
+  const resposta = await fetch("https://api.zenithpay.com.br/public/v1/transactions", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  },
+  body: JSON.stringify(payload),
+});
       body: JSON.stringify(payload),
     });
 
