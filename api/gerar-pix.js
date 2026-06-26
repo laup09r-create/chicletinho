@@ -163,7 +163,7 @@ export default async function handler(req, res) {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      error: "Erro interno na rota /api/gerar-pix.",
+      error: "VERSAO NOVA 26-06 - Erro interno na rota /api/gerar-pix.",
       details: error.message,
     });
   }
