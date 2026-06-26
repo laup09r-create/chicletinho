@@ -2515,4 +2515,17 @@ img {
 
 <!-- Don't Remove this code. Horizon Checkout App code. -->
 
-</div></body></html>
+</div>
+
+	<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const paymentButton = document.getElementById("paymentButton");
+
+    if (paymentButton) {
+      paymentButton.addEventListener("click", function () {
+        window.location.href = "/pix.html";
+      });
+    }
+  });
+</script>
+</body></html>
