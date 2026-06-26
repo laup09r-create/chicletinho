@@ -66,15 +66,36 @@ module.exports = async (req, res) => {
     }
 
     return res.status(200).json({
-      success: true,
-      qr_code: data.data.qr_code,       // imagem base64 (data:image/png;base64,...)
-      pix_code: data.data.pix_code,     // copia e cola (EMV)
-      hash: data.data.hash,             // hash da transação (p/ consultar status)
-      status: data.data.status,         // "pending"
-      expires_at: data.data.expires_at,
-    });
+  success: true,
+
+  qr_code:
+    data.data?.qr_code ||
+    data.data?.pix?.qr_code_base64 ||
+    null,
+
+  pix_code:
+    data.data?.pix_code ||
+    data.data?.pix?.pix_qr_code ||
+    data.data?.pix?.pix_url ||
+    "",
+
+  hash:
+    data.data?.hash ||
+    data.hash,
+
+  status:
+    data.data?.status ||
+    data.data?.payment_status ||
+    data.payment_status,
+
+  expires_at:
+    data.data?.expires_at ||
+    null,
+
+  raw: data.data || data
+});
   } catch (e) {
     console.error("ERRO gerar-pix:", e);
-    return res.status(500).json({ success: false, error: e.message });
-  }
-};
+    return res.status(500).json({ success: false, error: e.message 
+    });
+
