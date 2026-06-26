@@ -1,0 +1,119 @@
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({
+      success: false,
+      error: "Método não permitido. Use POST.",
+    });
+  }
+
+  try {
+    const token = process.env.ZENITH_TOKEN;
+    const offerHash = process.env.ZENITH_OFFER_HASH;
+
+    if (!token) {
+      return res.status(500).json({
+        success: false,
+        error: "ZENITH_TOKEN não configurado na Vercel.",
+      });
+    }
+
+    if (!offerHash) {
+      return res.status(500).json({
+        success: false,
+        error: "ZENITH_OFFER_HASH não configurado na Vercel.",
+      });
+    }
+
+    const {
+      valor = 19.9,
+      nome = "Cliente",
+      email = "cliente@email.com",
+      telefone = "11999999999",
+      cpf = "00000000000",
+    } = req.body || {};
+
+    const valorNumber = Number(valor);
+    const valorCentavos = Math.round(valorNumber * 100);
+
+    const payload = {
+      api_token: token,
+      amount: valorCentavos,
+      payment_method: "pix",
+      cart: [
+        {
+          offer_hash: offerHash,
+          price: valorCentavos,
+          quantity: 1,
+          operation_type: 1,
+          title: "Pagamento PIX",
+          cover: "https://google.com/image",
+        },
+      ],
+      installments: 1,
+      customer: {
+        name: nome,
+        email: email,
+        phone_number: telefone,
+        document: cpf,
+      },
+      tracking: {
+        src: "site",
+        utm_source: req.body.utm_source || "",
+        utm_campaign: req.body.utm_campaign || "",
+        utm_medium: req.body.utm_medium || "",
+        utm_content: req.body.utm_content || "",
+        utm_term: req.body.utm_term || "",
+      },
+    };
+
+    const resposta = await fetch("https://api.zenithpay.com.br/public/v1/transactions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await resposta.json();
+
+    if (!resposta.ok) {
+      return res.status(resposta.status).json({
+        success: false,
+        error: "Erro ao gerar Pix na Zenith.",
+        details: data,
+      });
+    }
+
+    const transactionHash =
+      data?.data?.transaction_hash ||
+      data?.transaction_hash ||
+      "";
+
+    const paymentUrl =
+      data?.data?.payment_url ||
+      data?.payment_url ||
+      "";
+
+    const pixCopiaCola =
+      data?.data?.qr_code ||
+      data?.qr_code ||
+      data?.data?.pixCopiaCola ||
+      data?.pixCopiaCola ||
+      "";
+
+    return res.status(200).json({
+      success: true,
+      transactionHash,
+      paymentUrl,
+      pixCopiaCola,
+      raw: data,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: "Erro interno ao gerar Pix.",
+      details: error.message,
+    });
+  }
+}
