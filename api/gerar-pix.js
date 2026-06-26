@@ -67,7 +67,7 @@ module.exports = async function handler(req, res) {
       },
     };
 
-    const resposta = await fetch("https://api.zenithpay.com.br/transactions", {
+    const resposta = await fetch("https://api.zenithpay.com.br/api/public/v1/transactions",
       method: "POST",
       headers: {
         "Content-Type": "application/json",
