@@ -1,4 +1,4 @@
-/export default async function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({
       success: false,
@@ -8,11 +8,19 @@
 
   try {
     const token = process.env.ZENITH_TOKEN;
+    const offerHash = process.env.ZENITH_OFFER_HASH;
 
     if (!token) {
       return res.status(500).json({
         success: false,
         error: "ZENITH_TOKEN não configurado na Vercel.",
+      });
+    }
+
+    if (!offerHash) {
+      return res.status(500).json({
+        success: false,
+        error: "ZENITH_OFFER_HASH não configurado na Vercel.",
       });
     }
 
@@ -47,6 +55,7 @@
 
       cart: [
         {
+          offer_hash: offerHash,
           title: "Pagamento PIX",
           price: valorCentavos,
           quantity: 1,
@@ -69,11 +78,23 @@
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
+        Accept: "application/json",
       },
       body: JSON.stringify(payload),
     });
 
-    const data = await resposta.json();
+    const respostaTexto = await resposta.text();
+
+    let data;
+    try {
+      data = JSON.parse(respostaTexto);
+    } catch (e) {
+      return res.status(500).json({
+        success: false,
+        error: "A Zenith não retornou JSON. Pode ser endpoint errado ou erro interno da API.",
+        resposta_bruta: respostaTexto,
+      });
+    }
 
     if (!resposta.ok) {
       return res.status(resposta.status).json({
@@ -94,6 +115,8 @@
       data?.copy_paste ||
       data?.data?.pix?.copy_paste ||
       data?.pix?.copy_paste ||
+      data?.data?.pix_code ||
+      data?.pix_code ||
       "";
 
     const transactionHash =
@@ -117,10 +140,11 @@
       pixCopiaCola,
       raw: data,
     });
+
   } catch (error) {
     return res.status(500).json({
       success: false,
-      error: "Erro interno ao gerar Pix.",
+      error: "Erro interno na rota /api/gerar-pix.",
       details: error.message,
     });
   }
