@@ -1,148 +1,80 @@
-module.exports = async function handler(req, res) {
-  try {
-    const token = (process.env.ZENITH_TOKEN || "")
-      .replace("Value:", "")
-      .replace("value:", "")
-      .replace(/\s/g, "")
-      .trim();
+// /api/gerar-pix.js
+// Cria uma transação PIX na ZenithPay e retorna QR Code + copia-e-cola.
 
-    const offerHash = (process.env.ZENITH_OFFER_HASH || "")
-      .replace("Value:", "")
-      .replace("value:", "")
-      .replace(/\s/g, "")
-      .trim();
+module.exports = async (req, res) => {
+  if (req.method !== "POST") {
+    return res
+      .status(405)
+      .json({ success: false, error: "Método não permitido. Use POST." });
+  }
 
-    if (req.method !== "POST") {
-      return res.status(405).json({
-        success: false,
-        error: "Método não permitido. Use POST.",
-      });
-    }
+  const API_TOKEN = process.env.ZENITH_API_TOKEN;
+  const url = `https://api.zenithpay.com.br/api/public/v1/transactions?api_token=${API_TOKEN}`;
 
-    if (!token) {
-      return res.status(500).json({
-        success: false,
-        error: "ZENITH_TOKEN não configurado.",
-      });
-    }
+  const { name, email, phone, document, amount } = req.body || {};
+  const valor = amount || 9667; // R$ 96,67 em centavos
 
-    if (!offerHash) {
-      return res.status(500).json({
-        success: false,
-        error: "ZENITH_OFFER_HASH não configurado.",
-      });
-    }
+  // validação mínima
+  if (!name || !email || !phone || !document) {
+    return res.status(400).json({
+      success: false,
+      error: "Campos obrigatórios: name, email, phone, document.",
+    });
+  }
 
-    const body = req.body || {};
-
-    const valor = Number(body.valor || 19.9);
-    const valorCentavos = Math.round(valor * 100);
-
-    const payload = {
-      api_token: token,
-      amount: valorCentavos,
-      payment_method: "pix",
-      installments: 1,
-
-      customer: {
-        name: body.nome || "Cliente Teste",
-        email: body.email || "cliente@email.com",
-        phone_number: body.telefone || "11999999999",
-        document: body.cpf || "00000000000",
-      },
-
-      cart: [
-        {
-          offer_hash: offerHash,
-          price: valorCentavos,
-          quantity: 1,
-          operation_type: 1,
-          title: "Pagamento PIX",
-        },
-      ],
-
-      tracking: {
-        src: "site",
-        utm_source: body.utm_source || "",
-        utm_campaign: body.utm_campaign || "",
-        utm_medium: body.utm_medium || "",
-        utm_content: body.utm_content || "",
-        utm_term: body.utm_term || "",
-      },
-    };
-
-    const resposta = await fetch(
-      "https://api.zenithpay.com.br/api/public/v1/transactions",
+  const payload = {
+    amount: valor,
+    offer_hash: "ux6yoe2d9p",
+    payment_method: "pix",
+    customer: {
+      name,
+      email,
+      phone_number: phone,
+      document,
+    },
+    cart: [
       {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(payload),
-      }
-    );
+        product_hash: "d6gjh3spfv",
+        title: "Taxa de Registro",
+        cover: null,
+        price: valor,
+        quantity: 1,
+        operation_type: 1,
+        tangible: false,
+      },
+    ],
+    expire_in_days: 1,
+    transaction_origin: "api",
+    postback_url: "https://www.conteudodiario.site/api/webhook-zenith",
+  };
 
-    const texto = await resposta.text();
+  try {
+    const r = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
 
-    let data;
+    const data = await r.json();
+    console.log("ZENITH STATUS:", r.status, "BODY:", JSON.stringify(data));
 
-    try {
-      data = JSON.parse(texto);
-    } catch (e) {
-      return res.status(500).json({
-        success: false,
-        error: "A Zenith não retornou JSON.",
-        resposta_bruta: texto,
-      });
+    if (r.status !== 201 || !data.success) {
+      return res.status(r.status).json({ success: false, error: data });
     }
-
-    if (!resposta.ok) {
-      return res.status(resposta.status).json({
-        success: false,
-        error: "Erro retornado pela Zenith.",
-        details: data,
-        payload_enviado: {
-          amount: valorCentavos,
-          payment_method: "pix",
-          offer_hash: offerHash,
-        },
-      });
-    }
-
-    const pixCopiaCola =
-      data?.pix?.pix_qr_code ||
-      data?.pix?.qr_code ||
-      data?.pix?.copy_paste ||
-      data?.data?.pix?.pix_qr_code ||
-      data?.data?.pix?.qr_code ||
-      data?.data?.pix?.copy_paste ||
-      data?.data?.qr_code ||
-      data?.data?.copy_paste ||
-      data?.data?.pix_code ||
-      data?.qr_code ||
-      data?.copy_paste ||
-      data?.pix_code ||
-      "";
-
-    const transactionHash =
-      data?.hash ||
-      data?.transaction_hash ||
-      data?.data?.hash ||
-      data?.data?.transaction_hash ||
-      "";
 
     return res.status(200).json({
       success: true,
-      pixCopiaCola,
-      transactionHash,
-      raw: data,
+      qr_code: data.data.qr_code,       // imagem base64 (data:image/png;base64,...)
+      pix_code: data.data.pix_code,     // copia e cola (EMV)
+      hash: data.data.hash,             // hash da transação (p/ consultar status)
+      status: data.data.status,         // "pending"
+      expires_at: data.data.expires_at,
     });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      error: "Erro interno na rota gerar-pix.",
-      details: String(error?.message || error),
-    });
+  } catch (e) {
+    console.error("ERRO gerar-pix:", e);
+    return res.status(500).json({ success: false, error: e.message });
   }
 };
