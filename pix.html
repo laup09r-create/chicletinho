@@ -248,70 +248,188 @@
     </div>
   </div>
 
-  <script>
-    const valorPadrao = 19.90;
+ <script>
+  const valorPadrao = 19.90;
 
-    function formatarMoeda(valor) {
-      return Number(valor).toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL"
+  function formatarMoeda(valor) {
+    return Number(valor).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL"
+    });
+  }
+
+  function pegarParametro(nome) {
+    const params = new URLSearchParams(window.location.search);
+    return params.get(nome) || "";
+  }
+
+  function pegarValorDaUrl() {
+    const valorUrl = pegarParametro("valor");
+
+    if (!valorUrl) return valorPadrao;
+
+    const valorTratado = valorUrl.replace(",", ".");
+    const valorNumber = Number(valorTratado);
+
+    if (isNaN(valorNumber) || valorNumber <= 0) {
+      return valorPadrao;
+    }
+
+    return valorNumber;
+  }
+
+  async function gerarPix() {
+    const loading = document.getElementById("loading");
+    const erro = document.getElementById("erro");
+    const status = document.getElementById("status");
+    const qrArea = document.getElementById("qrArea");
+    const pixCode = document.getElementById("pixCode");
+    const valorTexto = document.getElementById("valorTexto");
+    const qrCanvas = document.getElementById("qrCanvas");
+
+    erro.innerText = "";
+    status.innerText = "";
+    pixCode.value = "";
+    loading.style.display = "block";
+    qrArea.style.display = "none";
+
+    const valor = pegarValorDaUrl();
+    const amountCentavos = Math.round(valor * 100);
+
+    valorTexto.innerText = formatarMoeda(valor);
+
+    try {
+      if (typeof ttq !== "undefined") {
+        ttq.track("AddPaymentInfo", {
+          content_type: "product",
+          content_name: "Pagamento PIX",
+          value: valor,
+          currency: "BRL"
+        });
+      }
+
+      const response = await fetch("/api/gerar-pix", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name: pegarParametro("name") || pegarParametro("nome") || "Cliente Teste",
+          email: pegarParametro("email") || "cliente@email.com",
+          phone: pegarParametro("phone") || pegarParametro("telefone") || "11999999999",
+          document: pegarParametro("document") || pegarParametro("cpf") || "12345678909",
+          amount: amountCentavos
+        })
+      });
+
+      const texto = await response.text();
+
+      let data;
+      try {
+        data = JSON.parse(texto);
+      } catch (e) {
+        throw new Error("A API não retornou JSON: " + texto.slice(0, 200));
+      }
+
+      if (!response.ok || !data.success) {
+        console.log("Erro completo:", data);
+        throw new Error(
+          "Não foi possível gerar o PIX. Detalhes: " +
+          JSON.stringify(data.error || data.details || data)
+        );
+      }
+
+      const codigoPix = data.pix_code || data.pixCopiaCola || data.pix_code_emv || "";
+
+      if (!codigoPix) {
+        console.log("Resposta completa:", data);
+        throw new Error("A Zenith respondeu, mas não encontrei o código PIX.");
+      }
+
+      pixCode.value = codigoPix;
+
+      if (data.qr_code && data.qr_code.startsWith("data:image")) {
+        qrArea.innerHTML = '<img src="' + data.qr_code + '" alt="QR Code PIX" style="width:230px;max-width:100%;display:block;margin:0 auto;border-radius:10px;">';
+      } else {
+        await QRCode.toCanvas(qrCanvas, codigoPix, {
+          width: 230,
+          margin: 2
+        });
+      }
+
+      qrArea.style.display = "block";
+      status.innerText = "PIX gerado com sucesso.";
+
+      if (typeof ttq !== "undefined") {
+        ttq.track("InitiateCheckout", {
+          content_type: "product",
+          content_name: "PIX gerado",
+          value: valor,
+          currency: "BRL"
+        });
+      }
+
+      if (data.hash) {
+        acompanharStatus(data.hash);
+      }
+    } catch (e) {
+      erro.innerText = e.message;
+      console.error(e);
+    } finally {
+      loading.style.display = "none";
+    }
+  }
+
+  async function acompanharStatus(hash) {
+    const status = document.getElementById("status");
+
+    const intervalo = setInterval(async function() {
+      try {
+        const response = await fetch("/api/status-pix?hash=" + encodeURIComponent(hash));
+        const data = await response.json();
+
+        if (data.success && data.status === "paid") {
+          clearInterval(intervalo);
+          status.innerText = "✅ Pagamento confirmado!";
+
+          if (typeof ttq !== "undefined") {
+            ttq.track("CompletePayment", {
+              content_type: "product",
+              content_name: "Pagamento PIX confirmado",
+              currency: "BRL"
+            });
+          }
+        }
+      } catch (e) {
+        console.log("Erro ao consultar status:", e);
+      }
+    }, 5000);
+  }
+
+  function copiarPix() {
+    const pixCode = document.getElementById("pixCode");
+    const status = document.getElementById("status");
+
+    if (!pixCode.value) {
+      status.innerText = "Nenhum código PIX disponível ainda.";
+      return;
+    }
+
+    pixCode.select();
+    pixCode.setSelectionRange(0, 99999);
+    document.execCommand("copy");
+
+    if (typeof ttq !== "undefined") {
+      ttq.track("ClickButton", {
+        content_name: "Copiar PIX"
       });
     }
 
-    function pegarParametro(nome) {
-      const params = new URLSearchParams(window.location.search);
-      return params.get(nome) || "";
-    }
+    status.innerText = "Código PIX copiado com sucesso!";
+  }
 
-    function pegarValorDaUrl() {
-      const valorUrl = pegarParametro("valor");
-
-      if (!valorUrl) return valorPadrao;
-
-      const valorTratado = valorUrl.replace(",", ".");
-      const valorNumber = Number(valorTratado);
-
-      if (isNaN(valorNumber) || valorNumber <= 0) {
-        return valorPadrao;
-      }
-
-      return valorNumber;
-    }
-
-    async function gerarPix() {
-      const loading = document.getElementById("loading");
-      const erro = document.getElementById("erro");
-      const status = document.getElementById("status");
-      const qrArea = document.getElementById("qrArea");
-      const pixCode = document.getElementById("pixCode");
-      const valorTexto = document.getElementById("valorTexto");
-      const qrCanvas = document.getElementById("qrCanvas");
-
-      erro.innerText = "";
-      status.innerText = "";
-      pixCode.value = "";
-      loading.style.display = "block";
-      qrArea.style.display = "none";
-
-      const valor = pegarValorDaUrl();
-
-      valorTexto.innerText = formatarMoeda(valor);
-
-      try {
-        if (typeof ttq !== "undefined") {
-          ttq.track("AddPaymentInfo", {
-            content_type: "product",
-            content_name: "Pagamento PIX",
-            value: valor,
-            currency: "BRL"
-          });
-        }
-
-        const response = await fetch("/api/gerar-pix", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+  gerarPix();
+</script>
           body: JSON.stringify({
             valor: valor,
             nome: pegarParametro("nome") || "Cliente",
