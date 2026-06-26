@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   try {
     const token = (process.env.ZENITH_TOKEN || "")
       .replace("Value:", "")
@@ -34,7 +34,6 @@ export default async function handler(req, res) {
     }
 
     const body = req.body || {};
-
     const valor = Number(body.valor || 19.9);
     const valorCentavos = Math.round(valor * 100);
 
@@ -43,14 +42,12 @@ export default async function handler(req, res) {
       amount: valorCentavos,
       payment_method: "pix",
       installments: 1,
-
       customer: {
         name: body.nome || "Cliente Teste",
         email: body.email || "cliente@email.com",
         phone_number: body.telefone || "11999999999",
         document: body.cpf || "00000000000",
       },
-
       cart: [
         {
           offer_hash: offerHash,
@@ -60,7 +57,6 @@ export default async function handler(req, res) {
           title: "Pagamento PIX",
         },
       ],
-
       tracking: {
         src: "site",
         utm_source: body.utm_source || "",
@@ -71,7 +67,7 @@ export default async function handler(req, res) {
       },
     };
 
-    const resposta = await fetch("https://api.zenithpay.com.br/transactions , {
+    const resposta = await fetch("https://api.zenithpay.com.br/transactions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -141,4 +137,4 @@ export default async function handler(req, res) {
       details: String(error?.message || error),
     });
   }
-}
+};
