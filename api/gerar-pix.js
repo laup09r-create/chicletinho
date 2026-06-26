@@ -34,6 +34,7 @@ module.exports = async function handler(req, res) {
     }
 
     const body = req.body || {};
+
     const valor = Number(body.valor || 19.9);
     const valorCentavos = Math.round(valor * 100);
 
@@ -42,12 +43,14 @@ module.exports = async function handler(req, res) {
       amount: valorCentavos,
       payment_method: "pix",
       installments: 1,
+
       customer: {
         name: body.nome || "Cliente Teste",
         email: body.email || "cliente@email.com",
         phone_number: body.telefone || "11999999999",
         document: body.cpf || "00000000000",
       },
+
       cart: [
         {
           offer_hash: offerHash,
@@ -57,6 +60,7 @@ module.exports = async function handler(req, res) {
           title: "Pagamento PIX",
         },
       ],
+
       tracking: {
         src: "site",
         utm_source: body.utm_source || "",
@@ -67,18 +71,22 @@ module.exports = async function handler(req, res) {
       },
     };
 
-    const resposta = await fetch("https://api.zenithpay.com.br/api/public/v1/transactions",
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+    const resposta = await fetch(
+      "https://api.zenithpay.com.br/api/public/v1/transactions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      }
+    );
 
     const texto = await resposta.text();
 
     let data;
+
     try {
       data = JSON.parse(texto);
     } catch (e) {
