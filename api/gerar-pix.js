@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const token = process.env.ZENITH_TOKEN;
+   const offerHash = process.env.ZENITH_OFFER_HASH;
     const offerHash = process.env.ZENITH_OFFER_HASH;
 
     if (!token) {
