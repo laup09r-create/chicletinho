@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Pagamento PIX</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
+  <!-- TikTok Pixel Code Start -->
+  <script>
+  !function (w, d, t) {
+    w.TiktokAnalyticsObject = t;
+    var ttq = w[t] = w[t] || [];
+    ttq.methods = [
+      "page","track","identify","instances","debug","on","off","once","ready",
+      "alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"
+    ];
+    ttq.setAndDefer = function(t, e) {
+      t[e] = function() {
+        t.push([e].concat(Array.prototype.slice.call(arguments, 0)));
+      };
+    };
+    for (var i = 0; i < ttq.methods.length; i++) {
+      ttq.setAndDefer(ttq, ttq.methods[i]);
+    }
+    ttq.instance = function(t) {
+      var e = ttq._i[t] || [];
+      for (var n = 0; n < ttq.methods.length; n++) {
+        ttq.setAndDefer(e, ttq.methods[n]);
+      }
+      return e;
+    };
+    ttq.load = function(e, n) {
+      var r = "https://analytics.tiktok.com/i18n/pixel/events.js";
+      ttq._i = ttq._i || {};
+      ttq._i[e] = [];
+      ttq._i[e]._u = r;
+      ttq._t = ttq._t || {};
+      ttq._t[e] = +new Date;
+      ttq._o = ttq._o || {};
+      ttq._o[e] = n || {};
+      n = document.createElement("script");
+      n.type = "text/javascript";
+      n.async = true;
+      n.src = r + "?sdkid=" + e + "&lib=" + t;
+      e = document.getElementsByTagName("script")[0];
+      e.parentNode.insertBefore(n, e);
+    };
+
+    ttq.load("D8UV05JC77U7NGRF8D0G");
+    ttq.page();
+  }(window, document, "ttq");
+  </script>
+  <!-- TikTok Pixel Code End -->
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #2f3e1f, #556b2f);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: #1f2937;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 470px;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 28px 24px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.32);
+    }
+
+    .emblema {
+      width: 82px;
+      height: 82px;
+      border-radius: 50%;
+      background: #556b2f;
+      color: #f5e6a3;
+      border: 4px solid #d6c17a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 15px;
+      font-size: 38px;
+      font-weight: bold;
+    }
+
+    h1 {
+      color: #2f3e1f;
+      font-size: 25px;
+      margin-bottom: 8px;
+    }
+
+    .sub {
+      color: #4b5563;
+      font-size: 15px;
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
+
+    .valor {
+      color: #2f3e1f;
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 16px;
+    }
+
+    .loading {
+      background: #f3f4f6;
+      padding: 15px;
+      border-radius: 14px;
+      color: #555;
+      margin: 16px 0;
+    }
+
+    .qr-area {
+      display: none;
+      background: #f8fafc;
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 16px;
+    }
+
+    canvas {
+      width: 230px !important;
+      height: 230px !important;
+      max-width: 100%;
+      margin: 0 auto;
+      display: block;
+    }
+
+    .label {
+      text-align: left;
+      font-size: 14px;
+      font-weight: bold;
+      color: #2f3e1f;
+      margin-bottom: 8px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 120px;
+      border: 1px solid #d1d5db;
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 13px;
+      resize: none;
+      outline: none;
+      background: #fafafa;
+      margin-bottom: 12px;
+    }
+
+    .btn {
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 15px;
+      background: #556b2f;
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 5px;
+    }
+
+    .btn:hover {
+      background: #435625;
+    }
+
+    .btn-sec {
+      background: #d6c17a;
+      color: #2f3e1f;
+      margin-top: 10px;
+    }
+
+    .status {
+      margin-top: 14px;
+      font-size: 14px;
+      color: #15803d;
+      min-height: 20px;
+      line-height: 1.4;
+    }
+
+    .erro {
+      margin-top: 12px;
+      color: #b91c1c;
+      font-size: 14px;
+      font-weight: bold;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .rodape {
+      margin-top: 18px;
+      color: #6b7280;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <div class="emblema">★</div>
+
+    <h1>Pagamento via PIX</h1>
+
+    <p class="sub">
+      Escaneie o QR Code ou copie o código PIX abaixo para concluir o pagamento.
+    </p>
+
+    <div class="valor" id="valorTexto">R$ 19,90</div>
+
+    <div class="loading" id="loading">
+      Gerando seu Pix, aguarde...
+    </div>
+
+    <div class="qr-area" id="qrArea">
+      <canvas id="qrCanvas"></canvas>
+    </div>
+
+    <div class="label">PIX copia e cola</div>
+
+    <textarea id="pixCode" readonly placeholder="Seu código PIX aparecerá aqui..."></textarea>
+
+    <button class="btn" onclick="copiarPix()">Copiar código PIX</button>
+    <button class="btn btn-sec" onclick="gerarPix()">Gerar novo PIX</button>
+
+    <div class="status" id="status"></div>
+    <div class="erro" id="erro"></div>
+
+    <div class="rodape">
+      Após realizar o pagamento, aguarde a confirmação automática.
+    </div>
+  </div>
+
+  <script>
+    const valorPadrao = 19.90;
+
+    function formatarMoeda(valor) {
+      return Number(valor).toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+      });
+    }
+
+    function pegarParametro(nome) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(nome) || "";
+    }
+
+    function pegarValorDaUrl() {
+      const valorUrl = pegarParametro("valor");
+
+      if (!valorUrl) return valorPadrao;
+
+      const valorTratado = valorUrl.replace(",", ".");
+      const valorNumber = Number(valorTratado);
+
+      if (isNaN(valorNumber) || valorNumber <= 0) {
+        return valorPadrao;
+      }
+
+      return valorNumber;
+    }
+
+    async function gerarPix() {
+      const loading = document.getElementById("loading");
+      const erro = document.getElementById("erro");
+      const status = document.getElementById("status");
+      const qrArea = document.getElementById("qrArea");
+      const pixCode = document.getElementById("pixCode");
+      const valorTexto = document.getElementById("valorTexto");
+      const qrCanvas = document.getElementById("qrCanvas");
+
+      erro.innerText = "";
+      status.innerText = "";
+      pixCode.value = "";
+      loading.style.display = "block";
+      qrArea.style.display = "none";
+
+      const valor = pegarValorDaUrl();
+
+      valorTexto.innerText = formatarMoeda(valor);
+
+      try {
+        if (typeof ttq !== "undefined") {
+          ttq.track("AddPaymentInfo", {
+            content_type: "product",
+            content_name: "Pagamento PIX",
+            value: valor,
+            currency: "BRL"
+          });
+        }
+
+        const response = await fetch("/api/gerar-pix", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            valor: valor,
+            nome: pegarParametro("nome") || "Cliente",
+            email: pegarParametro("email") || "cliente@email.com",
+            telefone: pegarParametro("telefone") || "11999999999",
+            cpf: pegarParametro("cpf") || "00000000000",
+            utm_source: pegarParametro("utm_source"),
+            utm_campaign: pegarParametro("utm_campaign"),
+            utm_medium: pegarParametro("utm_medium"),
+            utm_content: pegarParametro("utm_content"),
+            utm_term: pegarParametro("utm_term")
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          console.log("Erro Zenith:", data);
+          throw new Error(data.error || "Não foi possível gerar o PIX.");
+        }
+
+        if (!data.pixCopiaCola) {
+          console.log("Resposta completa:", data.raw);
+          throw new Error("A Zenith respondeu, mas não encontrei o código PIX.");
+        }
+
+        pixCode.value = data.pixCopiaCola;
+
+        await QRCode.toCanvas(qrCanvas, data.pixCopiaCola, {
+          width: 230,
+          margin: 2
+        });
+
+        qrArea.style.display = "block";
+        status.innerText = "PIX gerado com sucesso.";
+
+        if (typeof ttq !== "undefined") {
+          ttq.track("InitiateCheckout", {
+            content_type: "product",
+            content_name: "PIX gerado",
+            value: valor,
+            currency: "BRL"
+          });
+        }
+      } catch (e) {
+        erro.innerText = e.message;
+        console.error(e);
+      } finally {
+        loading.style.display = "none";
+      }
+    }
+
+    function copiarPix() {
+      const pixCode = document.getElementById("pixCode");
+      const status = document.getElementById("status");
+
+      if (!pixCode.value) {
+        status.innerText = "Nenhum código PIX disponível ainda.";
+        return;
+      }
+
+      pixCode.select();
+      pixCode.setSelectionRange(0, 99999);
+      document.execCommand("copy");
+
+      if (typeof ttq !== "undefined") {
+        ttq.track("ClickButton", {
+          content_name: "Copiar PIX"
+        });
+      }
+
+      status.innerText = "Código PIX copiado com sucesso!";
+    }
+
+    gerarPix();
+  </script>
+</body>
+</html>
