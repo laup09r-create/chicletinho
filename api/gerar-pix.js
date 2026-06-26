@@ -85,9 +85,9 @@ const offerHash = (process.env.ZENITH_OFFER_HASH || "")
     const resposta = await fetch("https://api.zenithpay.com.br/public/v1/transactions", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
+      headers: {
+  "Content-Type": "application/json",
+  Accept: "application/json",
       },
       body: JSON.stringify(payload),
     });
