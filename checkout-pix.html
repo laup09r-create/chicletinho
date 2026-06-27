@@ -443,6 +443,8 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 
                 iniciarPolling();
 
+                ttq.track('InitiateCheckout', { value: 96.67, currency: 'BRL' });
+                
             } catch (e) {
                 mostrarErro('Erro de conexão. Verifique sua internet e tente novamente.');
                 console.error(e);
