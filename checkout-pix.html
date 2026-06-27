@@ -467,8 +467,8 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
                 } catch (_) {}
             }, 5000);
         }
-
         function mostrarPago() {
+            ttq.track('Purchase', { value: 96.67, currency: 'BRL', content_type: 'product', content_id: 'taxa-cac' });
             const box = document.getElementById('statusBox');
             box.className = 'status-box status-paid';
             box.innerHTML = '<i class="fas fa-check-circle"></i>Pagamento confirmado! ✅<br><small style="font-weight:400;font-size:0.82rem">Seu certificado CAC será emitido em breve.</small>';
