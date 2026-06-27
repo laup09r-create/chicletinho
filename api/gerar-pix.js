@@ -57,9 +57,11 @@ module.exports = async (req, res) => {
 
     // pix_qr_code vem como string EMV (copia e cola)
     // qr_code_base64 ou qr_code vem como imagem base64
-    const pix_code = d.pix_qr_code || d.pix_code || d.pix_url || d.copy_paste || null;
-    const qr_code  = d.qr_code_base64
-                   ? `data:image/png;base64,${d.qr_code_base64}`
+    // Os campos de PIX vêm dentro de data.pix
+    const pixObj   = d.pix || {};
+    const pix_code = pixObj.pix_qr_code || pixObj.pix_url || d.pix_qr_code || d.pix_code || null;
+    const qr_code  = pixObj.qr_code_base64
+                   ? `data:image/png;base64,${pixObj.qr_code_base64}`
                    : d.qr_code || null;
 
     return res.status(200).json({
